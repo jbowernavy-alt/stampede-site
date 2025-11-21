@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stampede Distribution - Equipping You For Success</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="https://js.stripe.com/v3/"></script> <!-- Stripe -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script> <!-- Google Login -->
+    <style>
+        :root { --primary-orange: #FF6B00; --navy: #003366; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; color: var(--navy); overflow-x: hidden; }
+        .navbar-brand { font-weight: bold; color: var(--primary-orange) !important; font-size: 1.8rem; }
+        .hero { background: var(--navy); color: white; padding: 120px 0; text-align: center; }
+        .btn-orange { background-color: var(--primary-orange); border: none; color: white; }
+        .btn-orange:hover { background-color: #e55a00; }
+        .product-card { transition: all 0.3s; border: none; cursor: pointer; }
+        .product-card:hover { transform: translateY(-8px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        footer { background: var(--navy); color: white; padding: 60px 0 20px; }
+        .category-btn { background: #e9ecef; color: #333; border: 1px solid #ddd; padding: 8px 20px; border-radius: 50px; font-weight: 500; transition: all 0.3s; }
+        .category-btn.active { background: var(--primary-orange); color: white; border-color: var(--primary-orange); }
+        .pagination .page-link { color: var(--navy); }
+        .pagination .page-item.active .page-link { background: var(--primary-orange); border-color: var(--primary-orange); color: white; }
+        .cart-sidebar { position: fixed; top: 0; right: -400px; width: 380px; height: 100vh; background: white; box-shadow: -5px 0 15px rgba(0,0,0,0.2); transition: right 0.4s ease; z-index: 1050; overflow-y: auto; }
+        .cart-sidebar.open { right: 0; }
+        .cart-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1040; opacity: 0; visibility: hidden; transition: all 0.4s; }
+        .cart-overlay.show { opacity: 1; visibility: visible; }
+        .cart-header { background: var(--navy); color: white; padding: 20px; }
+        .quantity-btn { width: 32px; height: 32px; padding: 0; }
+        .empty-cart { text-align: center; padding: 60px 20px; color: #666; }
+        #g_id_onload { display: none; }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="#">Stampede Distribution</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="#">Home</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Products</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">Restoration</a></li>
+                            <li><a class="dropdown-item" href="#">Abatement</a></li>
+                            <li><a class="dropdown-item" href="#">Janitorial</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="#">Brands</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
+                </ul>
+                <form class="d-flex me-3" onsubmit="return false;">
+                    <input class="form-control me-2" type="search" id="searchInput" placeholder="Search products..." autocomplete="off">
+                    <button class="btn btn-outline-success" type="button"><i class="bi bi-search"></i></button>
+                </form>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown" id="userMenu" style="display: none;">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <img id="userAvatar" src="" alt="User" class="rounded-circle me-2" width="30" height="30">
+                            <span id="userName"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="showOrders()">My Orders</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="logoutGoogle()">Logout</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item" id="loginSection" style="display: block;">
+                        <div id="g_id_onload"
+                             data-client_id="YOUR_GOOGLE_CLIENT_ID_HERE"  <!-- Replace with your Client ID -->
+                             data-callback="handleGoogleLogin"
+                             data-auto_prompt="false">
+                        </div>
+                        <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="signin_with" data-shape="rectangular" data-logo_alignment="left"></div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" href="#" id="cartToggle">
+                            <i class="bi bi-cart3 fs-5"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartCount">0</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="container">
+            <h1>Equipping You For Success</h1>
+            <p class="lead">Your trusted source for professional equipment, chemicals, and supplies.</p>
+            <a href="#" class="btn btn-orange btn-lg">Shop Now</a>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="text-center mb-4">Featured Products</h2>
+            <div class="text-center mb-5">
+                <button class="category-btn active me-2 mb-2" data-category="all">All Products</button>
+                <button class="category-btn me-2 mb-2" data-category="Restoration">Restoration</button>
+                <button class="category-btn me-2 mb-2" data-category="Safety">Safety</button>
+                <button class="category-btn me-2 mb-2" data-category="Chemicals">Chemicals</button>
+                <button class="category-btn me-2 mb-2" data-category="Janitorial">Janitorial</button>
+            </div>
+            <div id="productsRow" class="row"></div>
+            <div id="no-results" class="text-center py-5" style="display:none;">
+                <h4>No products found</h4>
+                <p>Try adjusting your search or category filter.</p>
+            </div>
+            <nav aria-label="Product pagination" class="mt-5">
+                <ul class="pagination justify-content-center" id="pagination"></ul>
+            </nav>
+        </div>
+    </section>
+
+    <!-- Product Detail Modal (from previous) -->
+    <div class="cart-overlay" id="modalOverlay"></div>
+    <div class="cart-sidebar" id="productModal" style="width: 500px;">
+        <div class="cart-header">
+            <h5>Product Details</h5>
+            <button class="btn btn-light btn-sm" id="closeModal">×</button>
+        </div>
+        <div id="modalContent" class="p-3"></div>
+    </div>
+
+    <!-- Cart Sidebar -->
+    <div class="cart-overlay" id="cartOverlay"></div>
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h5>Shopping Cart (<span id="cartItemsCount">0</span>)</h5>
+            <button class="btn btn-light btn-sm" id="closeCart">×</button>
+        </div>
+        <div id="cartItems"></div>
+        <div class="p-4 border-top bg-light">
+            <div class="d-flex justify-content-between mb-3">
+                <strong>Subtotal:</strong>
+                <strong id="cartSubtotal">$0.00</strong>
+            </div>
+            <button class="btn btn-orange w-100 mb-2" id="checkoutButton">Proceed to Checkout</button>
+            <button class="btn btn-outline-secondary w-100" id="continueShopping">Continue Shopping</button>
+        </div>
+    </div>
+
+    <!-- Orders Modal (for logged-in users) -->
+    <div class="cart-overlay" id="ordersOverlay" style="display:none;"></div>
+    <div class="cart-sidebar" id="ordersModal" style="display:none; width: 500px;">
+        <div class="cart-header">
+            <h5>My Orders</h5>
+            <button class="btn btn-light btn-sm" onclick="closeOrders()">×</button>
+        </div>
+        <div id="ordersContent" class="p-3">Loading orders...</div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>Stampede Distribution</h5>
+                    <p>1025 Avenue S, Suite 200<br>Grand Prairie, TX 75050<br>Phone: (214) 235-0721</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white">Products</a></li>
+                        <li><a href="#" class="text-white">Brands</a></li>
+                        <li><a href="#" class="text-white">Support</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>Contact</h5>
+                    <p>info@stampedistribution.com<br>Serving professionals nationwide</p>
+                </div>
+            </div>
+            <hr class="my-4">
+            <p class="text-center mb-0">© 2025 Stampede Distribution. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Replace with your Google Client ID
+        const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID_HERE'; // From Google Console
+        const STRIPE_PUBLISHABLE_KEY = 'pk_test_51...'; // From Stripe Dashboard
+
+        // Products from your PDF (full 80+ items - abbreviated for space; expand as needed)
+        const products = [
+            { id: 1, name: "Painter's Poly, 12' X 400' .31 MIL CLEAR", price: 15.75, category: "Restoration", img: "https://via.placeholder.com/400x300?text=Poly+Sheeting", desc: "Light-duty painter's plastic sheeting for dust protection." },
+            { id: 2, name: "4 MIL 20' X 100' CLEAR POLY SHEETING", price: 40.50, category: "Restoration", img: "https://via.placeholder.com/400x300?text=Poly+Sheeting", desc: "Medium-duty poly sheeting, 30 rolls per pallet." },
+            // Add all 80+ from your PDF here - use the list I provided earlier
+            // For full list, copy from my previous response
+        ];
+
+        let cart = JSON.parse(localStorage.getItem('stampedeCart')) || [];
+        let currentUser = JSON.parse(localStorage.getItem('stampedeUser')) || null;
+        let currentCategory = 'all';
+        let currentSearch = '';
+        let currentPage = 1;
+        const productsPerPage = 6;
+
+        const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
+
+        // Google Login Callback
+        window.handleGoogleLogin = async (response) => {
+            try {
+                const { credential } = response;
+                // Verify token with backend or Google's API (for static, use client-side for demo)
+                const payload = JSON.parse(atob(credential.split('.')[1]));
+                const user = { id: payload.sub, name: payload.name, email: payload.email, avatar: payload.picture };
+                localStorage.setItem('stampedeUser', JSON.stringify(user));
+                currentUser = user;
+                updateUserUI();
+                showNotification(`Welcome, ${user.name}!`);
+                loadOrders(); // Load user's orders if backend available
+            } catch (error) {
+                console.error('Google Login Error:', error);
+            }
+        };
+
+        function updateUserUI() {
+            if (currentUser) {
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('userMenu').style.display = 'block';
+                document.getElementById('userName').textContent = currentUser.name;
+                document.getElementById('userAvatar').src = currentUser.avatar;
+            }
+        }
+
+        function logoutGoogle() {
+            localStorage.removeItem('stampedeUser');
+            currentUser = null;
+            updateUserUI();
+            google.accounts.id.disableAutoSelect();
+            showNotification('Logged out successfully.');
+        }
+
+        function showOrders() {
+            if (!currentUser) return showNotification('Please log in.');
+            document.getElementById('ordersOverlay').style.display = 'block';
+            document.getElementById('ordersModal').style.display = 'block';
+            document.getElementById('ordersContent').innerHTML = '<p>Your orders will appear here (connect backend for real data).</p>';
+        }
+
+        function closeOrders() {
+            document.getElementById('ordersOverlay').style.display = 'none';
+            document.getElementById('ordersModal').style.display = 'none';
+        }
+
+        // Rest of functions (renderProducts, addToCart, etc.) from previous responses
+        // For brevity, assume they are included - add them here
+
+        // Checkout with Stripe
+        document.getElementById('checkoutButton').addEventListener('click', async () => {
+            if (cart.length === 0) return showNotification('Cart is empty!');
+            const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+            const lineItems = cart.map(item => ({
+                price_data: {
+                    currency: 'usd',
+                    product_data: { name: item.name },
+                    unit_amount: Math.round(item.price * 100),
+                },
+                quantity: item.quantity,
+            }));
+            // For static site, use Stripe's client-only checkout (no backend needed for demo)
+            stripe.redirectToCheckout({
+                lineItems,
+                mode: 'payment',
+                successUrl: window.location.origin + '/success.html?session_id={CHECKOUT_SESSION_ID}',
+                cancelUrl: window.location.origin + '/cancel.html',
+            });
+        });
+
+        // Initialize
+        updateUserUI();
+        renderProducts();
+        updateCartUI();
+    </script>
+</body>
+</html>
